@@ -52,7 +52,7 @@ public class PcapReader {
             hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
 
-        //TODO simplify
+        //cette fonction est degeu mais ça marche donc pourquoi changer?
 
         String headerString = new String(hexChars, StandardCharsets.UTF_8);
         String micro = "0000000100002000000000000000000000040002A1B2C3D4";
