@@ -70,8 +70,6 @@ public class PcapReader {
     public Packet readPacket(byte[] header) throws IOException{
         //read the header of the packet
 
-        input.read(header);
-
         ByteBuffer timeS = ByteBuffer.wrap(header, 0, 4);
         ByteBuffer timesms = ByteBuffer.wrap(header, 4, 4);
         ByteBuffer datanb = ByteBuffer.wrap(header, 8, 4);
