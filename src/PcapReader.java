@@ -92,7 +92,7 @@ public class PcapReader {
         byte[] data = new byte[packetlength];
         input.read(data);
         //create a packet object with the data
-        return new Packet(data,timestampS,timestampMS);
+        return new Packet(data,timestampS,timestampMS, lilendian);
 
     }
 }

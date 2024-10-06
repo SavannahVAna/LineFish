@@ -4,8 +4,8 @@ public class IPPacket extends EtherPacket {
     protected  int version;
 
 
-    public IPPacket(byte[] data, int timestampS, int timestampMS,String Macsource, String Macdest, String sourceIP, String destinationIP, int protocol) {
-        super(data, timestampS, timestampMS, Macsource, Macdest);
+    public IPPacket(byte[] data, int timestampS, int timestampMS,  boolean end, String Macsource, String Macdest, String sourceIP, String destinationIP, int protocol) {
+        super(data, timestampS, timestampMS,  end, Macsource, Macdest);
         this.sourceIP = sourceIP;
         this.destinationIP = destinationIP;
         this.version = protocol;

@@ -9,6 +9,7 @@ public class Main {
 
         try {
             ArrayList<Packet> packetList = reader.openPcap("\\C:\\Users\\savpo\\Downloads\\tcp-ecn-sample.pcap\\");
+            PacketHandler.printPacket(packetList.getFirst());
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
