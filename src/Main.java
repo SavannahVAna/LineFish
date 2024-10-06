@@ -11,12 +11,7 @@ public class Main {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-        try {
-            reader.readHeader();
-            reader.readPacket();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
     }
 
 }

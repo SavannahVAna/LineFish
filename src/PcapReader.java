@@ -1,5 +1,8 @@
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 //Class pcapreader to open, read pcap files and tranform the packets into Protocol objects
 public class PcapReader {
@@ -9,10 +12,19 @@ public class PcapReader {
     private final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);
     //to open pcap
     public void openPcap(String filename) throws FileNotFoundException {
+
         try{
             this.input = new BufferedInputStream(new FileInputStream(filename));
+            readHeader();
+            int bytesread;
+            byte[] buffer = new byte[16];
+            while ((bytesread = input.read(buffer)) != -1){
+                readPacket(buffer);
+            }
         } catch (FileNotFoundException e) {
             System.out.println("File not found: " + filename);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -31,13 +43,13 @@ public class PcapReader {
                 header[header.length - i - 1] = temp;
             }
             lilendian = true;
-
-            for (int j = 0; j < header.length; j++) {
-                int v = header[j] & 0xFF;
-                hexChars[j * 2] = HEX_ARRAY[v >>> 4];
-                hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
-            }
         }
+        for (int j = 0; j < header.length; j++) {
+            int v = header[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+
         //TODO simplify
 
         String headerString = new String(hexChars, StandardCharsets.UTF_8);
@@ -52,28 +64,33 @@ public class PcapReader {
         }
     }
 
-    private int readLittleEndian32Bits(byte[] buffer, int offset) {
-        // Lire 4 octets à partir du tableau buffer dans l'ordre little-endian
-        return ((buffer[offset] & 0xFF)) |
-                ((buffer[offset + 1] & 0xFF) << 8) |
-                ((buffer[offset + 2] & 0xFF) << 16) |
-                ((buffer[offset + 3] & 0xFF) << 24);
-    }
 
-    public void readPacket() throws IOException{
+    public Packet readPacket(byte[] header) throws IOException{
         //read the header of the packet
-        byte[] header = new byte[16];
-        byte[] hexChars = new byte[header.length * 2];
+
+        input.read(header);
+
+        ByteBuffer timeS = ByteBuffer.wrap(header, 0, 4);
+        ByteBuffer timesms = ByteBuffer.wrap(header, 4, 4);
+        ByteBuffer datanb = ByteBuffer.wrap(header, 8, 4);
         int timestampS;
         int timestampMS;
         int packetlength;
-        input.read(header);
+
         if(lilendian){
-            timestampS = readLittleEndian32Bits(header, 0);
-            timestampMS = readLittleEndian32Bits(header, 4);
-            packetlength = readLittleEndian32Bits(header, 8);
+            timeS.order(ByteOrder.LITTLE_ENDIAN);
+            timesms.order(ByteOrder.LITTLE_ENDIAN);
+            datanb.order(ByteOrder.LITTLE_ENDIAN);
         }
-        try()
+
+        timestampS = timeS.getInt();
+        timestampMS = timesms.getInt();
+        packetlength = datanb.getInt();
+
+        byte[] data = new byte[packetlength];
+        input.read(data);
+        //create a packet object with the data
+        return new Packet(data,timestampS,timestampMS);
 
     }
 }
