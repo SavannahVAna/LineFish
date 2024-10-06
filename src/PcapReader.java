@@ -11,21 +11,23 @@ public class PcapReader {
     private String stamp;
     private final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);
     //to open pcap
-    public void openPcap(String filename) throws FileNotFoundException {
-
+    public ArrayList<Packet> openPcap(String filename) throws FileNotFoundException {
+        ArrayList<Packet> packets = new ArrayList<>();
         try{
             this.input = new BufferedInputStream(new FileInputStream(filename));
             readHeader();
             int bytesread;
             byte[] buffer = new byte[16];
             while ((bytesread = input.read(buffer)) != -1){
-                readPacket(buffer);
+               packets.add(readPacket(buffer));
             }
+            input.close();
         } catch (FileNotFoundException e) {
             System.out.println("File not found: " + filename);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return packets;
     }
 
     //takes informations from header
