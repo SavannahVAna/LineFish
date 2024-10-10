@@ -10,17 +10,11 @@ public class PacketHandler {
         //prend ce qui va etre la nouvelle partie data dans la frame ethernet
         ByteBuffer buffer = ByteBuffer.wrap(data, 14,data.length-18);
         byte[] remain = new byte[data.length-18];
-        System.arraycopy(data, 13, remain, 0, remain.length);
+        System.arraycopy(data, 14, remain, 0, remain.length);
         //puis les futurs attributs de la classe Etherpacket
         ByteBuffer dst = ByteBuffer.wrap(data, 0,6);
         ByteBuffer src = ByteBuffer.wrap(data,6,6);
         ByteBuffer t = ByteBuffer.wrap(data,12,2);
-        if(packet.isLilendian()){
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            dst.order(ByteOrder.LITTLE_ENDIAN);
-            src.order(ByteOrder.LITTLE_ENDIAN);
-            t.order(ByteOrder.LITTLE_ENDIAN);
-        }
 
         short value = t.getShort(); // Lit les deux octets dans un short
         String ethtyp = "inconnu";
@@ -45,16 +39,21 @@ public class PacketHandler {
         int headerLen = ihl*4; //la longueur du header
         byte[] remain = new byte[data.length-headerLen];
         System.arraycopy(data, headerLen -1, remain, 0, remain.length);
-        ByteBuffer pr = ByteBuffer.wrap(data,9,1);
-        ByteBuffer ipsrc = ByteBuffer.wrap(data,12,4);
-        ByteBuffer ipdst = ByteBuffer.wrap(data,16,4);
-        if(packet.isLilendian()){
-            pr.order(ByteOrder.LITTLE_ENDIAN);
-            ipsrc.order(ByteOrder.LITTLE_ENDIAN);
-            ipdst.order(ByteOrder.LITTLE_ENDIAN);
-        }
-        String IPSrc = (InetAddress.getByAddress(ipsrc.array())).getHostAddress();
-        String IPDst = (InetAddress.getByAddress(ipdst.array())).getHostAddress();
+        byte[] pri = {0x0000 , data[8]};
+        ByteBuffer pr = ByteBuffer.wrap(pri);
+        byte[] ipsrc  = new byte[4];
+        byte[] ipdst  = new byte[4];
+        System.arraycopy(data, 11, ipsrc,0  , 4);
+        System.arraycopy(data, 15, ipsrc,0  , 4);
+
+        //if(packet.isLilendian()){
+        //    pr.order(ByteOrder.LITTLE_ENDIAN);
+        //    ipsrc.order(ByteOrder.LITTLE_ENDIAN);
+        //    ipdst.order(ByteOrder.LITTLE_ENDIAN);
+        //}
+
+        String IPSrc = (InetAddress.getByAddress(ipsrc)).getHostAddress();
+        String IPDst = (InetAddress.getByAddress(ipdst)).getHostAddress();
 
         return new IPPacket(remain, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(),IPSrc,IPDst,pr.getShort());
 
@@ -235,5 +234,16 @@ public class PacketHandler {
         }
         System.out.println(hexString);
 
+    }
+
+    public static void printEtherpacket(EtherPacket packet) {
+        byte[] packetData = packet.getData();
+        ByteBuffer buffer = ByteBuffer.wrap(packetData);
+        StringBuilder hexString = new StringBuilder();
+        while (buffer.hasRemaining()) {
+            byte b = buffer.get();
+            hexString.append(String.format("%02X ", b)); // Conversion en hexadécimal avec deux chiffres
+        }
+        System.out.println(hexString);
     }
 }
