@@ -22,6 +22,11 @@ public class DHCPPacket extends UDPPacket{
         else if(op==2){
             a = "response";
         }
-        return (this.getSourceIP() +" " +this.getDestinationIP() + " DHCP " + a + " address given " + yaddr);
+        if(!yaddr.equals("0.0.0.0")){
+            return (this.getSourceIP() +" " +this.getDestinationIP() + " DHCP " + a + " address given " + yaddr);
+        }
+        else{
+            return (this.getSourceIP() + " " + this.getDestinationIP()) + " DHCP " + a;
+        }
     }
 }
