@@ -12,4 +12,7 @@ public class DNSPacket extends UDPPacket {
     public String getMessage() {
         return message;
     }
+    public String toString() {
+        return this.getSourceIP() + " " +this.getDestinationIP() + " DNS " + QR + " message=" + message ;
+    }
 }

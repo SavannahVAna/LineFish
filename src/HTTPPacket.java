@@ -7,4 +7,7 @@ public class HTTPPacket extends TCPPacket{
     public String getMessage() {
         return message;
     }
+    public String toString(){
+        return (this.getSourceIP()+ " " + this.getDestinationIP() + " HTTPS " +this.getMessage());
+    }
 }

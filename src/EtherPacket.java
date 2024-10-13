@@ -17,4 +17,8 @@ public class EtherPacket extends Packet {
     public String getEtherType() {
         return etherType;
     }
+
+    public String toString() {
+        return (getMACdest() + " " + getMACsrc() + " " + getEtherType() );
+    }
 }

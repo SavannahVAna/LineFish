@@ -29,4 +29,8 @@ public class TCPPacket extends IPPacket {
     public int getAckNb() {
         return ackNb;
     }
+
+    public String toString() {
+        return this.getSourceIP() + " " + this.getDestinationIP() + " TCP " + this.portSrc + " -> " + this.portDst + " " + this.flag ;
+    }
 }

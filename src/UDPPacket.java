@@ -12,4 +12,8 @@ public class UDPPacket extends IPPacket {
     public int getPortDst() {
         return portDst;
     }
+
+    public String toString() {
+        return this.getSourceIP() + " " + this.getDestinationIP() + " UDP " + this.portSrc + " -> " + this.portDst ;
+    }
 }

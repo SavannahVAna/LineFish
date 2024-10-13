@@ -7,4 +7,14 @@ public class ICMPPacket extends IPPacket {
     public int getType() {
         return type;
     }
+    public String toString() {
+        String a ="";
+        if (type==8){
+            a += " ping request";
+        }
+        else if (type==0){
+            a += " echo response";
+        }
+        return (this.getSourceIP() +" "+ this.getDestinationIP() + " ICMP " + a);
+    }
 }

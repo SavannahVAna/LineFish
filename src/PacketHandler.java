@@ -8,9 +8,16 @@ public class PacketHandler {
     public static EtherPacket AnalyseEther(Packet packet) {
         byte[] data = packet.getData();
         //prend ce qui va etre la nouvelle partie data dans la frame ethernet
-        ByteBuffer buffer = ByteBuffer.wrap(data, 14,data.length-18);
-        byte[] remain = new byte[data.length-18];
-        System.arraycopy(data, 14, remain, 0, remain.length);
+        byte[] remainder = new byte[data.length-14];
+        System.arraycopy(data, 14, remainder, 0, remainder.length);
+        int o = remainder.length;
+        int c = 0;
+        while (remainder[o-1] == 0){
+            o--;
+            c++;
+        }
+        byte[] remain = new byte[remainder.length-c];
+        System.arraycopy(remainder, 0, remain, 0, remain.length);
         //puis les futurs attributs de la classe Etherpacket
         ByteBuffer dst = ByteBuffer.wrap(data, 0,6);
         ByteBuffer src = ByteBuffer.wrap(data,6,6);
@@ -38,13 +45,13 @@ public class PacketHandler {
         int ihl = firstByte & 0x0F;  // Extraire les 4 bits de poids faible (IHL)
         int headerLen = ihl*4; //la longueur du header
         byte[] remain = new byte[data.length-headerLen];
-        System.arraycopy(data, headerLen -1, remain, 0, remain.length);
-        byte[] pri = {0x0000 , data[8]};
+        System.arraycopy(data, headerLen , remain, 0, remain.length);
+        byte[] pri = {0x0000 , data[9]};
         ByteBuffer pr = ByteBuffer.wrap(pri);
         byte[] ipsrc  = new byte[4];
         byte[] ipdst  = new byte[4];
-        System.arraycopy(data, 11, ipsrc,0  , 4);
-        System.arraycopy(data, 15, ipsrc,0  , 4);
+        System.arraycopy(data, 12, ipsrc,0  , 4);
+        System.arraycopy(data, 16, ipdst,0  , 4);
 
         //if(packet.isLilendian()){
         //    pr.order(ByteOrder.LITTLE_ENDIAN);
@@ -62,17 +69,21 @@ public class PacketHandler {
     public static IPPacket AnalyseIPv6(EtherPacket packet) throws UnknownHostException {
         byte[] data = packet.getData();
         byte[] payload = new byte[data.length-40];
-        System.arraycopy(data, 39, payload, 0, payload.length);
-        ByteBuffer srcIP =ByteBuffer.wrap(data,8,16);
-        ByteBuffer dstIP = ByteBuffer.wrap(data,24,16);
-        ByteBuffer pr = ByteBuffer.wrap(data,6,1);
-        if(packet.isLilendian()){
-            pr.order(ByteOrder.LITTLE_ENDIAN);
-            dstIP.order(ByteOrder.LITTLE_ENDIAN);
-            srcIP.order(ByteOrder.LITTLE_ENDIAN);
-        }
-        String IPSrc = (Inet6Address.getByAddress(srcIP.array())).getHostAddress();
-        String IPDst = (Inet6Address.getByAddress(pr.array())).getHostAddress();
+        System.arraycopy(data, 40, payload, 0, payload.length);
+
+        byte[] ipsrc  = new byte[16];
+        byte[] ipdst  = new byte[16];
+        System.arraycopy(data, 24, ipdst , 0, 16);
+        System.arraycopy(data, 8, ipsrc , 0, 16);
+        byte[] pri = {0x0000 , data[6]};
+        ByteBuffer pr = ByteBuffer.wrap(pri);
+        //if(packet.isLilendian()){
+        //    pr.order(ByteOrder.LITTLE_ENDIAN);
+        //    dstIP.order(ByteOrder.LITTLE_ENDIAN);
+        //    srcIP.order(ByteOrder.LITTLE_ENDIAN);
+        //}
+        String IPSrc = (Inet6Address.getByAddress(ipsrc)).getHostAddress();
+        String IPDst = (Inet6Address.getByAddress(ipdst)).getHostAddress();
         return new IPPacket(payload, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(),IPSrc,IPDst,pr.getShort());
     }
 
@@ -86,13 +97,13 @@ public class PacketHandler {
         ByteBuffer senderIP = ByteBuffer.wrap(data,14,4);
         ByteBuffer destMAC = ByteBuffer.wrap(data,18,6);
         ByteBuffer destIP = ByteBuffer.wrap(data,24,4);
-        if(packet.isLilendian()){
+        /*if(packet.isLilendian()){
             op.order(ByteOrder.LITTLE_ENDIAN);
             senderMAC.order(ByteOrder.LITTLE_ENDIAN);
             senderIP.order(ByteOrder.LITTLE_ENDIAN);
             destMAC.order(ByteOrder.LITTLE_ENDIAN);
             destIP.order(ByteOrder.LITTLE_ENDIAN);
-        }
+        }*/
         int pr = op.getShort();
         if (pr == 1){
             p = "request";
@@ -111,32 +122,35 @@ public class PacketHandler {
         byte[] data = packet.getData();
         byte[] data2 = new byte[data.length-8];
         System.arraycopy(data, 7, data2, 0, data2.length);
-        ByteBuffer type = ByteBuffer.wrap(data,0,1);
-        if (packet.isLilendian()){
-            type.order(ByteOrder.LITTLE_ENDIAN);
-        }
-        return new ICMPPacket(data2, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getVersion(), type.getShort());
+        byte[] ty = {0x0000 , data[0]};
+        ByteBuffer type = ByteBuffer.wrap(ty);
+        //if (packet.isLilendian()){
+        //    type.order(ByteOrder.LITTLE_ENDIAN);
+        //}
+        return new ICMPPacket(data2, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), type.getShort());
     }
 
     public static TCPPacket AnalyseTCP(IPPacket packet) {
         byte[] data = packet.getData();
-        byte r = data[12];
-        int len = (r >> 4) & 0x0F; //prendre la longueur du header
-        int length = len*4;
-        byte[] data2 = new byte[data.length-length];
-        System.arraycopy(data, length-1, data2, 0, data2.length);
+        //byte r = data[12];
+        //int len = (r >> 4) & 0x0F; //prendre la longueur du header
+        //int length = len*4;
+        //byte[] data2 = new byte[data.length-len];
+        //System.arraycopy(data, len, data2, 0, data2.length);
         ByteBuffer src = ByteBuffer.wrap(data,0,2);
         ByteBuffer dst = ByteBuffer.wrap(data,2,2);
         ByteBuffer se = ByteBuffer.wrap(data,4,4);
         ByteBuffer ack = ByteBuffer.wrap(data,8,4);
         String f = extractTcpFlags(data[13]);
-        if (packet.isLilendian()){
+        /*if (packet.isLilendian()){
             se.order(ByteOrder.LITTLE_ENDIAN);
             ack.order(ByteOrder.LITTLE_ENDIAN);
             src.order(ByteOrder.LITTLE_ENDIAN);
             dst.order(ByteOrder.LITTLE_ENDIAN);
-        }
-        return new TCPPacket(data2, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getVersion(), src.getShort(), dst.getShort(), se.getInt(), ack.getInt(), f);
+        }*/
+        short signed = src.getShort();
+        int unsigned = signed & 0xFFFF;
+        return new TCPPacket(data, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), unsigned, dst.getShort(), se.getInt(), ack.getInt(), f);
     }
 
     public static UDPPacket AnalyseUDP(IPPacket packet) {
@@ -145,17 +159,33 @@ public class PacketHandler {
         System.arraycopy(data, 7, data2, 0, data2.length);
         ByteBuffer src = ByteBuffer.wrap(data,0,2);
         ByteBuffer dst = ByteBuffer.wrap(data,2,2);
-        if (packet.isLilendian()){
-            dst.order(ByteOrder.LITTLE_ENDIAN);
-            src.order(ByteOrder.LITTLE_ENDIAN);
-        }
-        return new UDPPacket(data2, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getVersion(), src.getShort(), dst.getShort());
+        //if (packet.isLilendian()){
+        //    dst.order(ByteOrder.LITTLE_ENDIAN);
+        //    src.order(ByteOrder.LITTLE_ENDIAN);
+        //}
+        return new UDPPacket(data2, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), src.getShort(), dst.getShort());
     }
 
     public static HTTPPacket AnalyseHTTP(TCPPacket packet) {
         byte[] data = packet.getData();
-        String utf8string = new String(data, java.nio.charset.StandardCharsets.UTF_8);
-        return new HTTPPacket(packet.getData(), packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getVersion(), packet.getPortSrc(), packet.getPortDst(), packet.getSeqNb(), packet.getAckNb(), packet.getFlag(), utf8string);
+        byte r = data[12];
+        int len = (r >> 4) & 0x0F; //prendre la longueur du header
+        int length = len*4;
+        byte[] data2 = new byte[data.length-length];
+        System.arraycopy(data, length, data2, 0, data2.length);
+        String utf8string = new String(data2, java.nio.charset.StandardCharsets.UTF_8);
+        return new HTTPPacket(packet.getData(), packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), packet.getSeqNb(), packet.getAckNb(), packet.getFlag(), utf8string);
+    }
+
+    public static FTPPacket AnalyseFTP(TCPPacket packet) {
+        byte[] data = packet.getData();
+        byte r = data[12];
+        int len = (r >> 4) & 0x0F; //prendre la longueur du header
+        int length = len*4;
+        byte[] data2 = new byte[data.length-length];
+        System.arraycopy(data, length, data2, 0, data2.length);
+        String utf8string = new String(data2, java.nio.charset.StandardCharsets.UTF_8);
+        return new FTPPacket(packet.getData(), packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), packet.getSeqNb(), packet.getAckNb(), packet.getFlag(), utf8string);
     }
 
     public static DNSPacket AnalyseDNS(UDPPacket packet) {
@@ -169,13 +199,22 @@ public class PacketHandler {
         byte[] data2 = new byte[data.length-12];
         System.arraycopy(data,11,data2,0,data2.length);
         String utf8string = new String(data2, java.nio.charset.StandardCharsets.UTF_8);
-        return new DNSPacket(data, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.etherType, packet.getSourceIP(), packet.getDestinationIP(), packet.getVersion(), packet.getPortSrc(), packet.getPortDst(), f,utf8string);
+        return new DNSPacket(data, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.etherType, packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), f,utf8string);
     }
 
     //public static QUICPacket AnalyseQUIC(UDPPacket packet) {
         //byte[] data = packet.getData();
 
     //}
+
+    public static DHCPPacket AnalyseDHCP(UDPPacket packet) throws UnknownHostException {
+        byte[] data = packet.getData();
+        int op = data[1];
+        byte[] iaddress = new byte[4];
+        System.arraycopy(data,17,iaddress,0,4);
+        String givenIP = (InetAddress.getByAddress(iaddress)).getHostAddress();
+        return new DHCPPacket(data,packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), op,givenIP);
+    }
 
     public static String extractTcpFlags(byte flagsByte) {
         // Convertir le byte en entier
@@ -236,7 +275,7 @@ public class PacketHandler {
 
     }
 
-    public static void printEtherpacket(EtherPacket packet) {
+    public static void printOtherpacket(EtherPacket packet) {
         byte[] packetData = packet.getData();
         ByteBuffer buffer = ByteBuffer.wrap(packetData);
         StringBuilder hexString = new StringBuilder();
