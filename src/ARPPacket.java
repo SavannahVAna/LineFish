@@ -4,8 +4,8 @@ public class ARPPacket extends EtherPacket{
     private String receivehardaddr;
     private String sendip;
     private String receiveip;
-    public ARPPacket(byte[] data, int timestampS, int timestampMS, boolean isendian, String MACdest, String MACsrc, String etherType,String operation, String sendhardaddr, String receivehardaddr, String sendip, String receiveip) {
-        super(data, timestampS,  timestampMS, isendian,MACdest, MACsrc, etherType);
+    public ARPPacket(byte[] data, long timestampS, boolean isendian, String MACdest, String MACsrc, String etherType, String operation, String sendhardaddr, String receivehardaddr, String sendip, String receiveip) {
+        super(data, timestampS, isendian,MACdest, MACsrc, etherType);
         this.operation = operation;
         this.sendhardaddr = sendhardaddr;
         this.receivehardaddr = receivehardaddr;

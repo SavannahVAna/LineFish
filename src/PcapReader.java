@@ -3,7 +3,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
+
 //Class pcapreader to open, read pcap files and tranform the packets into Protocol objects
 public class PcapReader {
     private InputStream input;
@@ -86,11 +86,12 @@ public class PcapReader {
         timestampS = timeS.getInt();
         timestampMS = timesms.getInt();
         packetlength = datanb.getInt();
+        long timestamp = timestampS*1000000L + timestampMS;
 
         byte[] data = new byte[packetlength];
         input.read(data);
         //create a packet object with the data
-        return new Packet(data,timestampS,timestampMS, lilendian);
+        return new Packet(data,timestamp, lilendian);
 
     }
 }

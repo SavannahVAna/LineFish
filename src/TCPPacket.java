@@ -4,8 +4,8 @@ public class TCPPacket extends IPPacket {
     protected  int seqNb;
     protected  String flag;
     protected  int ackNb;
-    public TCPPacket(byte[] data, int timestampS, int timestampMS, boolean isend, String Macsource, String Macdest,String ethtype, String sourceIP, String destinationIP, int protocol, int portSrc, int portDst, int seqNb, int ack, String flag) {
-        super(data, timestampS, timestampMS, isend,Macsource, Macdest, ethtype,sourceIP, destinationIP, protocol);
+    public TCPPacket(byte[] data, long timestampS, boolean isend, String Macsource, String Macdest, String ethtype, String sourceIP, String destinationIP, int protocol, int portSrc, int portDst, int seqNb, int ack, String flag) {
+        super(data, timestampS, isend,Macsource, Macdest, ethtype,sourceIP, destinationIP, protocol);
         this.portSrc = portSrc;
         this.portDst = portDst;
         this.seqNb = seqNb;

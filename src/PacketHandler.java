@@ -34,7 +34,7 @@ public class PacketHandler {
         else if (value == (short) 0x86DD) {
             ethtyp = "IPv6";
         }
-        return new EtherPacket(remain, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(),toHexString(dst),toHexString(src),ethtyp );
+        return new EtherPacket(remain, packet.getTimestampS(), packet.isLilendian(),toHexString(dst),toHexString(src),ethtyp );
     }
 
     public static IPPacket AnalyseIPv4(EtherPacket packet) throws UnknownHostException {
@@ -62,7 +62,7 @@ public class PacketHandler {
         String IPSrc = (InetAddress.getByAddress(ipsrc)).getHostAddress();
         String IPDst = (InetAddress.getByAddress(ipdst)).getHostAddress();
 
-        return new IPPacket(remain, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(),IPSrc,IPDst,pr.getShort());
+        return new IPPacket(remain, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(),IPSrc,IPDst,pr.getShort());
 
     }
 
@@ -84,7 +84,7 @@ public class PacketHandler {
         //}
         String IPSrc = (Inet6Address.getByAddress(ipsrc)).getHostAddress();
         String IPDst = (Inet6Address.getByAddress(ipdst)).getHostAddress();
-        return new IPPacket(payload, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(),IPSrc,IPDst,pr.getShort());
+        return new IPPacket(payload, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(),IPSrc,IPDst,pr.getShort());
     }
 
     public static ARPPacket AnalyseARP(EtherPacket packet) throws UnknownHostException {
@@ -115,7 +115,7 @@ public class PacketHandler {
         String sdIP = (InetAddress.getByAddress(senderIP.array())).getHostAddress();
         String dstMAC = toHexString(destMAC);
         String dstIP = (InetAddress.getByAddress(destIP.array())).getHostAddress();
-        return new ARPPacket(data2, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACdest(), packet.getMACsrc(), packet.getEtherType(), p,sdMAC,dstMAC,sdIP,dstIP);
+        return new ARPPacket(data2, packet.getTimestampS(), packet.isLilendian(), packet.getMACdest(), packet.getMACsrc(), packet.getEtherType(), p,sdMAC,dstMAC,sdIP,dstIP);
     }
 
     public static ICMPPacket AnalyseICMP(IPPacket packet) {
@@ -127,7 +127,7 @@ public class PacketHandler {
         //if (packet.isLilendian()){
         //    type.order(ByteOrder.LITTLE_ENDIAN);
         //}
-        return new ICMPPacket(data2, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), type.getShort());
+        return new ICMPPacket(data2, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), type.getShort());
     }
 
     public static TCPPacket AnalyseTCP(IPPacket packet) {
@@ -150,7 +150,7 @@ public class PacketHandler {
         }*/
         short signed = src.getShort();
         int unsigned = signed & 0xFFFF;
-        return new TCPPacket(data, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), unsigned, dst.getShort(), se.getInt(), ack.getInt(), f);
+        return new TCPPacket(data, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), unsigned, dst.getShort(), se.getInt(), ack.getInt(), f);
     }
 
     public static UDPPacket AnalyseUDP(IPPacket packet) {
@@ -163,7 +163,7 @@ public class PacketHandler {
         //    dst.order(ByteOrder.LITTLE_ENDIAN);
         //    src.order(ByteOrder.LITTLE_ENDIAN);
         //}
-        return new UDPPacket(data2, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), src.getShort(), dst.getShort());
+        return new UDPPacket(data2, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), src.getShort(), dst.getShort());
     }
 
     public static HTTPPacket AnalyseHTTP(TCPPacket packet) {
@@ -174,7 +174,7 @@ public class PacketHandler {
         byte[] data2 = new byte[data.length-length];
         System.arraycopy(data, length, data2, 0, data2.length);
         String utf8string = new String(data2, java.nio.charset.StandardCharsets.UTF_8);
-        return new HTTPPacket(packet.getData(), packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), packet.getSeqNb(), packet.getAckNb(), packet.getFlag(), utf8string);
+        return new HTTPPacket(packet.getData(), packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), packet.getSeqNb(), packet.getAckNb(), packet.getFlag(), utf8string);
     }
 
     public static FTPPacket AnalyseFTP(TCPPacket packet) {
@@ -185,7 +185,7 @@ public class PacketHandler {
         byte[] data2 = new byte[data.length-length];
         System.arraycopy(data, length, data2, 0, data2.length);
         String utf8string = new String(data2, java.nio.charset.StandardCharsets.UTF_8);
-        return new FTPPacket(packet.getData(), packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), packet.getSeqNb(), packet.getAckNb(), packet.getFlag(), utf8string);
+        return new FTPPacket(packet.getData(), packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), packet.getSeqNb(), packet.getAckNb(), packet.getFlag(), utf8string);
     }
 
     public static DNSPacket AnalyseDNS(UDPPacket packet) {
@@ -199,7 +199,7 @@ public class PacketHandler {
         byte[] data2 = new byte[data.length-12];
         System.arraycopy(data,11,data2,0,data2.length);
         String utf8string = new String(data2, java.nio.charset.StandardCharsets.UTF_8);
-        return new DNSPacket(data, packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.etherType, packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), f,utf8string);
+        return new DNSPacket(data, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.etherType, packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), f,utf8string);
     }
 
     //public static QUICPacket AnalyseQUIC(UDPPacket packet) {
@@ -213,7 +213,7 @@ public class PacketHandler {
         byte[] iaddress = new byte[4];
         System.arraycopy(data,17,iaddress,0,4);
         String givenIP = (InetAddress.getByAddress(iaddress)).getHostAddress();
-        return new DHCPPacket(data,packet.getTimestampS(), packet.getTimestampMS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), op,givenIP);
+        return new DHCPPacket(data,packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), op,givenIP);
     }
 
     public static String extractTcpFlags(byte flagsByte) {

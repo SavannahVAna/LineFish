@@ -1,18 +1,18 @@
 public class Packet {
     protected byte[] data;
-    protected  int timestampS;
-    protected  int timestampMS;
+    protected long timestampS;
+    //protected  int timestampMS;
     protected final boolean islilendian;
 
-    public Packet(byte[] data, int timestampS, int timestampMS, boolean islilendian) {
+    public Packet(byte[] data, long timestampS, boolean islilendian) {
         this.data = data;
-        this.timestampS = timestampS;
-        this.timestampMS = timestampMS;
+        this.timestampS = timestampS ;
+        //this.timestampMS = timestampMS;
         this.islilendian = islilendian;
     }
 
     public byte[] getData() { return data; }
-    public int getTimestampS() { return timestampS; }
-    public int getTimestampMS() { return timestampMS; }
+    public long getTimestampS() { return timestampS; }
+    //public int getTimestampMS() { return timestampMS; }
     public boolean isLilendian() { return islilendian; }
 }
