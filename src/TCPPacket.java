@@ -1,3 +1,5 @@
+import java.nio.charset.StandardCharsets;
+
 public class TCPPacket extends IPPacket {
     protected  int portSrc;
     protected  int portDst;
@@ -32,5 +34,9 @@ public class TCPPacket extends IPPacket {
 
     public String toString() {
         return this.getSourceIP() + " " + this.getDestinationIP() + " TCP " + this.portSrc + " -> " + this.portDst + " " + this.flag ;
+    }
+
+    public String getMessage(){
+        return new String(data, StandardCharsets.US_ASCII);
     }
 }
