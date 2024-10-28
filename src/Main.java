@@ -10,7 +10,14 @@ public class Main {
             double t;
             long ti;
             int n = 0;
-            ArrayList<Packet> packetList = reader.openPcap("C:\\Users\\savpo\\Downloads\\tcp-ecn-sample.pcap");
+            String filename;
+            if(args.length == 0){
+                filename = "C:\\Users\\savpo\\Downloads\\pcaps\\pcaps\\tcp.pcap"; //for debugging purposes
+            }
+            else {
+                filename = args[0];
+            }
+            ArrayList<Packet> packetList = reader.openPcap(filename);
             ArrayList<EtherPacket> etherlist = new ArrayList<EtherPacket>();
             for (Packet packet : packetList) {
                 etherlist.add(PacketHandler.AnalyseEther(packet));
@@ -49,12 +56,21 @@ public class Main {
                                 }
 
                             }
+                            else if(tcpPacket.getPortDst() == 21 || tcpPacket.getPortDst() ==20 || tcpPacket.getPortSrc() == 20 || tcpPacket.getPortSrc() == 21){
+                                try{
+                                FTPPacket ftpPacket = PacketHandler.AnalyseFTP(tcpPacket);
+                                System.out.println(n + " " + t  + " " +ftpPacket);}
+                                catch (NegativeArraySizeException e){
+                                    System.out.println(n + " " + t + " " +tcpPacket);
+                                }
+                            }
                             else {
 
                                 System.out.println(n + " " + t +  " " +tcpPacket);
                             }
+
                             break;
-                            //TODO implement FTP
+
                         case 17 :
                             UDPPacket udpPacket = PacketHandler.AnalyseUDP(ipPacket);
                             if(udpPacket.getPortDst() == 53 || udpPacket.getPortSrc() == 53){
@@ -69,7 +85,9 @@ public class Main {
 
                                 System.out.println(n + " " + t  + " " +dhcpPacket);
                             }
-                            //TODO implement QUIC
+                            else if (PacketHandler.isQUIC(udpPacket)) {
+                                QUICPacket quicPacket = PacketHandler.AnalyseQUIC(udpPacket);
+                                System.out.println(n + " " + t  + " " +quicPacket);}
                             else {
 
 
@@ -97,12 +115,19 @@ public class Main {
 
                                 System.out.println(n + " " + t  + " " +httpPacket);
                             }
+                            else if(tcpPacket.getPortDst() == 21 || tcpPacket.getPortDst() ==20 || tcpPacket.getPortSrc() == 20 || tcpPacket.getPortSrc() == 21){
+                                try{
+                                    FTPPacket ftpPacket = PacketHandler.AnalyseFTP(tcpPacket);
+                                    System.out.println(n + " " + t  + " " +ftpPacket);}
+                                catch (NegativeArraySizeException e){
+                                    System.out.println(n + " " + t + " " +tcpPacket);
+                                }
+                            }
                             else {
 
                                 System.out.println(n + " " + t  + " " +tcpPacket);
                             }
                             break;
-                        //TODO implement FTP
                         case 17 :
                             UDPPacket udpPacket = PacketHandler.AnalyseUDP(ipPacket);
                             if(udpPacket.getPortDst() == 53 || udpPacket.getPortSrc() == 53){
@@ -114,9 +139,10 @@ public class Main {
                                 DHCPPacket dhcpPacket = PacketHandler.AnalyseDHCP(udpPacket);
 
                                 System.out.println(n + " " + t  + " " +dhcpPacket);
-                            }
-                            //TODO implement QUIC
-                            else {
+                            } else if (PacketHandler.isQUIC(udpPacket)) {
+                                QUICPacket quicPacket = PacketHandler.AnalyseQUIC(udpPacket);
+                                System.out.println(n + " " + t  + " " +quicPacket);
+                            } else {
 
 
                                 System.out.println(n + " " + t  + " " +udpPacket);

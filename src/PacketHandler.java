@@ -3,6 +3,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 
 public class PacketHandler {
     public static EtherPacket AnalyseEther(Packet packet) {
@@ -89,34 +90,30 @@ public class PacketHandler {
 
     public static ARPPacket AnalyseARP(EtherPacket packet) throws UnknownHostException {
         byte[] data = packet.getData();
-        byte[] data2 = new byte[data.length-28];
-        String p = "";
+        byte[] data2 = new byte[data.length - 28];
         System.arraycopy(data, 27, data2, 0, data2.length);
-        ByteBuffer op = ByteBuffer.wrap(data,6,2);
-        ByteBuffer senderMAC = ByteBuffer.wrap(data,8,6);
-        ByteBuffer senderIP = ByteBuffer.wrap(data,14,4);
-        ByteBuffer destMAC = ByteBuffer.wrap(data,18,6);
-        ByteBuffer destIP = ByteBuffer.wrap(data,24,4);
-        /*if(packet.isLilendian()){
-            op.order(ByteOrder.LITTLE_ENDIAN);
-            senderMAC.order(ByteOrder.LITTLE_ENDIAN);
-            senderIP.order(ByteOrder.LITTLE_ENDIAN);
-            destMAC.order(ByteOrder.LITTLE_ENDIAN);
-            destIP.order(ByteOrder.LITTLE_ENDIAN);
-        }*/
-        int pr = op.getShort();
-        if (pr == 1){
-            p = "request";
-        }
-        else if (pr == 2){
-            p = "reply";
-        }
-        String sdMAC = toHexString(senderMAC);
-        String sdIP = (InetAddress.getByAddress(senderIP.array())).getHostAddress();
-        String dstMAC = toHexString(destMAC);
-        String dstIP = (InetAddress.getByAddress(destIP.array())).getHostAddress();
-        return new ARPPacket(data2, packet.getTimestampS(), packet.isLilendian(), packet.getMACdest(), packet.getMACsrc(), packet.getEtherType(), p,sdMAC,dstMAC,sdIP,dstIP);
+
+        // Opération (ARP request = 1, reply = 2) -> data[6] et data[7]
+        int pr = ((data[6] & 0xFF) << 8) | (data[7] & 0xFF);
+        String p = (pr == 1) ? "request" : (pr == 2) ? "reply" : "unknown";
+
+        // Adresse MAC source (6 octets à partir de data[8])
+        String sdMAC = toHexString(Arrays.copyOfRange(data, 8, 14));
+
+        // Adresse IP source (4 octets à partir de data[14])
+        String sdIP = InetAddress.getByAddress(Arrays.copyOfRange(data, 14, 18)).getHostAddress();
+
+        // Adresse MAC destination (6 octets à partir de data[18])
+        String dstMAC = toHexString(Arrays.copyOfRange(data, 18, 24));
+
+        // Adresse IP destination (4 octets à partir de data[24])
+        String dstIP = InetAddress.getByAddress(Arrays.copyOfRange(data, 24, 28)).getHostAddress();
+
+        return new ARPPacket(data2, packet.getTimestampS(), packet.isLilendian(),
+                packet.getMACdest(), packet.getMACsrc(), packet.getEtherType(),
+                p, sdMAC, dstMAC, sdIP, dstIP);
     }
+
 
     public static ICMPPacket AnalyseICMP(IPPacket packet) {
         byte[] data = packet.getData();
@@ -132,26 +129,39 @@ public class PacketHandler {
 
     public static TCPPacket AnalyseTCP(IPPacket packet) {
         byte[] data = packet.getData();
-        //byte r = data[12];
-        //int len = (r >> 4) & 0x0F; //prendre la longueur du header
-        //int length = len*4;
-        //byte[] data2 = new byte[data.length-len];
-        //System.arraycopy(data, len, data2, 0, data2.length);
-        ByteBuffer src = ByteBuffer.wrap(data,0,2);
-        ByteBuffer dst = ByteBuffer.wrap(data,2,2);
-        ByteBuffer se = ByteBuffer.wrap(data,4,4);
-        ByteBuffer ack = ByteBuffer.wrap(data,8,4);
-        String f = extractTcpFlags(data[13]);
-        /*if (packet.isLilendian()){
-            se.order(ByteOrder.LITTLE_ENDIAN);
-            ack.order(ByteOrder.LITTLE_ENDIAN);
-            src.order(ByteOrder.LITTLE_ENDIAN);
-            dst.order(ByteOrder.LITTLE_ENDIAN);
-        }*/
-        short signed = src.getShort();
-        int unsigned = signed & 0xFFFF;
-        return new TCPPacket(data, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), unsigned, dst.getShort(), se.getInt(), ack.getInt(), f);
+
+        // Lecture des ports source et destination (2 octets chacun)
+        ByteBuffer buffer = ByteBuffer.wrap(data);
+
+        // Port source (octets 0-1)
+        int srcPort = buffer.getShort() & 0xFFFF; // Utiliser & 0xFFFF pour obtenir un entier non signé
+        // Port destination (octets 2-3)
+        int dstPort = buffer.getShort() & 0xFFFF; // Utiliser & 0xFFFF pour obtenir un entier non signé
+
+        // Lecture des numéros de séquence et d'accusé de réception (4 octets chacun)
+        int seqNumber = buffer.getInt(); // Octets 4-7
+        int ackNumber = buffer.getInt(); // Octets 8-11
+
+        // Lecture des flags TCP (octet 13)
+        String flags = extractTcpFlags(data[13]);
+
+        // Création et retour du paquet TCP
+        return new TCPPacket(data,
+                packet.getTimestampS(),
+                packet.isLilendian(),
+                packet.getMACsrc(),
+                packet.getMACdest(),
+                packet.getEtherType(),
+                packet.getSourceIP(),
+                packet.getDestinationIP(),
+                packet.getProtocol(),
+                srcPort,
+                dstPort,
+                seqNumber,
+                ackNumber,
+                flags);
     }
+
 
     public static UDPPacket AnalyseUDP(IPPacket packet) {
         byte[] data = packet.getData();
@@ -202,10 +212,52 @@ public class PacketHandler {
         return new DNSPacket(data, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.etherType, packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), f,utf8string);
     }
 
-    //public static QUICPacket AnalyseQUIC(UDPPacket packet) {
-        //byte[] data = packet.getData();
+    public static QUICPacket AnalyseQUIC(UDPPacket packet) {
+        byte[] data = packet.getData();
+        String type ="" ;
+        int ver;
+        boolean bit7IsOne = (data[0] & 0b10000000) != 0;
+        boolean isSixthBitSet = (data[0] & 0b00100000) != 0;
+        if(bit7IsOne && isSixthBitSet) {
+            byte[] version = {data[1] , data[2], data[3] , data[4] };
+            ByteBuffer vrs = ByteBuffer.wrap(version);
+            int maskedBits = (data[0] & 0b00001110) >> 2;
+            ver =  vrs.getInt();
+            type = switch (maskedBits) {
+                case 0 -> "initial";
+                case 1 -> "RTT";
+                case 2 -> "Handshake";
+                case 3 -> "Retry";
+                default -> type;
+            };
+        } else if (isSixthBitSet) {
+            type = "short";
+            ver = 0;
+        }
+        return new QUICPacket(data, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), type);
+    }
 
-    //}
+    public static boolean isQUIC(UDPPacket packet) {
+        if(packet.getPortSrc() == 443 || packet.getPortDst() == 443){
+            byte[] data = packet.getData();
+            boolean isSixthBitSet = (data[0] & 0b00100000) != 0;
+            if(isSixthBitSet){
+                boolean bit7IsOne = (data[0] & 0b10000000) != 0;
+                if(bit7IsOne) {
+                    byte[] version = {data[1], data[2], data[3], data[4]};
+                    ByteBuffer vrs = ByteBuffer.wrap(version);
+                    int v = vrs.getInt();
+                    if (v == 1 || v == 1362113840) {
+                        return true;
+                    }
+                    return true;
+                }
+                return true;
+            }
+            return false;
+        }
+        return false;
+    }
 
     public static DHCPPacket AnalyseDHCP(UDPPacket packet) throws UnknownHostException {
         byte[] data = packet.getData();
@@ -257,6 +309,14 @@ public class PacketHandler {
             hexString.append(String.format("%02X ", b)); // Conversion en hexadécimal avec deux chiffres
         }
         return hexString.toString();
+    }
+
+    public static String toHexString(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : bytes) {
+            hexString.append(String.format("%02X ", b)); // Conversion en hexadécimal avec deux chiffres
+        }
+        return hexString.toString().trim();
     }
 
     public static void printPacket(Packet packet) {

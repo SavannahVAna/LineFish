@@ -1,13 +1,14 @@
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 
 public class Options {
     static void TCPStream(ArrayList<Packet> p, int n) throws UnknownHostException {
         Packet fistpacket = p.get(n);
-        long t;
+        //long t;
 
-        int nb = 0;
+        //int nb = 0;
         EtherPacket firstEtherPacket = PacketHandler.AnalyseEther(fistpacket);
         IPPacket firstIPpacket = PacketHandler.AnalyseIPv4(firstEtherPacket);
         TCPPacket firstTCPPacket = PacketHandler.AnalyseTCP(firstIPpacket);
@@ -30,7 +31,7 @@ public class Options {
                             HTTPPacket httpPacket = PacketHandler.AnalyseHTTP(tcpPacket);
                             tcp.add(httpPacket);
                         } catch (Exception e) {
-                            t = tcpPacket.getTimestampS() ;
+                            //t = tcpPacket.getTimestampS() ;
                             tcp.add(tcpPacket);
                         }
 
@@ -103,11 +104,33 @@ public class Options {
                 ack++;
             }
         }*/
-        long time = etherlist.getFirst().getTimestampS();
-        double ti;
+        ArrayList<TCPPacket> secondList= new ArrayList<>(); //1 chercher antécédents
         for (TCPPacket packet : realList) {
-            t = packet.getTimestampS() - time;
-            ti = t/1000000.0;
+            if(packet.getAckNb()== seq && packet.getSeqNb() == ack-1){
+                secondList.add(packet);
+                seq = packet.getSeqNb();
+                ack = packet.getAckNb();
+            }
+        }
+        Collections.reverse(secondList);
+        secondList.add(firstTCPPacket);
+        seq = firstTCPPacket.getSeqNb();
+        ack = firstTCPPacket.getAckNb();
+
+        for (TCPPacket packet : realList) {
+            if(packet.getAckNb()== seq +1 && packet.getSeqNb() == ack){
+                secondList.add(packet);
+                seq = packet.getSeqNb();
+                ack = packet.getAckNb();
+            }
+        }
+
+
+        //long time = etherlist.getFirst().getTimestampS();
+        //double ti;
+        for (TCPPacket packet : realList) {
+            //t = packet.getTimestampS() - time;
+            //ti = t/1000000.0;
             //System.out.println(nb + " " + ti  +" " + packet.getMessage());
             System.out.println(packet.getMessage());
         }

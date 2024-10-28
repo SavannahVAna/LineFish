@@ -9,6 +9,6 @@ public class FTPPacket extends TCPPacket {
     }
 
     public String toString(){
-        return (this.getSourceIP()+ " " + this.getDestinationIP() + " FTP " +this.getCommand());
+        return (this.getSourceIP()+ " " + this.getDestinationIP() +" "+ this.portSrc + " -> " + this.portDst + " FTP " +this.getCommand());
     }
 }
