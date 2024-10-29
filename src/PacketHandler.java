@@ -187,6 +187,27 @@ public class PacketHandler {
         return new HTTPPacket(packet.getData(), packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), packet.getSeqNb(), packet.getAckNb(), packet.getFlag(), utf8string);
     }
 
+    public static boolean testHTTP(TCPPacket packet) {
+        try{
+            byte[] data = packet.getData();
+            byte r = data[12];
+            int len = (r >> 4) & 0x0F; //prendre la longueur du header
+            int length = len*4;
+            byte[] data2 = new byte[data.length-length];
+            System.arraycopy(data, length, data2, 0, data2.length);
+            String utf8string = new String(data2, java.nio.charset.StandardCharsets.UTF_8);
+            if(utf8string.toUpperCase().contains("HTTP")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        catch(Exception e){
+            return false;
+        }
+    }
+
     public static FTPPacket AnalyseFTP(TCPPacket packet) {
         byte[] data = packet.getData();
         byte r = data[12];

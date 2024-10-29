@@ -109,7 +109,7 @@ public class Main {
                             break;
                         case 6 :
                             TCPPacket tcpPacket = PacketHandler.AnalyseTCP(ipPacket);
-                            if (tcpPacket.getPortDst() == 80 || tcpPacket.getPortSrc() == 80 || tcpPacket.getPortDst() == 8080 || tcpPacket.getPortSrc() == 8080) {
+                            if (tcpPacket.getPortDst() == 80 || tcpPacket.getPortSrc() == 80 || tcpPacket.getPortDst() == 8080 || tcpPacket.getPortSrc() == 8080 || PacketHandler.testHTTP(tcpPacket)) {
                                 HTTPPacket httpPacket = PacketHandler.AnalyseHTTP(tcpPacket);
 
 
