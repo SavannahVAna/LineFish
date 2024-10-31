@@ -10,9 +10,13 @@ public class LineFish {
                 String[] a = {args[0],args[2]};
                 Main2.main(a);
             }
+            else if (args[1].equals("-p")) {
+                String[] a = {args[0]};
+                Main.main(a);
+            }
         }
         else {
-            Main2.main(new String[] {file});
+            Main3.main(new String[] {file});
         }
     }
 }

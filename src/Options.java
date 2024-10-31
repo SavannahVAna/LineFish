@@ -105,25 +105,38 @@ public class Options {
             }
         }*/
         ArrayList<TCPPacket> secondList= new ArrayList<>(); //1 chercher antécédents
-        for (TCPPacket packet : realList) {
-            if(packet.getAckNb()== seq && packet.getSeqNb() == ack-1){
-                secondList.add(packet);
-                seq = packet.getSeqNb();
-                ack = packet.getAckNb();
+        boolean update = false;
+        do{
+            update = false;
+            for (TCPPacket packet : realList) {
+                if (packet.getAckNb() == seq && packet.getSeqNb() == ack - 1) {
+                    if (!secondList.contains(packet)) {
+                        secondList.add(packet);
+                        seq = packet.getSeqNb();
+                        ack = packet.getAckNb();
+                        update = true;
+                    }
+                }
             }
-        }
+        }while(update);
         Collections.reverse(secondList);
         secondList.add(firstTCPPacket);
         seq = firstTCPPacket.getSeqNb();
         ack = firstTCPPacket.getAckNb();
 
-        for (TCPPacket packet : realList) {
-            if(packet.getAckNb()== seq +1 && packet.getSeqNb() == ack){
-                secondList.add(packet);
-                seq = packet.getSeqNb();
-                ack = packet.getAckNb();
+        do{
+            update = false;
+            for (TCPPacket packet : realList) {
+                if(packet.getAckNb()== seq +1 && packet.getSeqNb() == ack){
+                    if (!secondList.contains(packet)) {
+                    secondList.add(packet);
+                    seq = packet.getSeqNb();
+                    ack = packet.getAckNb();
+                    update = true;
+                    }
+                }
             }
-        }
+        }while(update);
 
 
         //long time = etherlist.getFirst().getTimestampS();

@@ -127,6 +127,28 @@ public class PacketHandler {
         return new ICMPPacket(data2, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), type.getShort());
     }
 
+    public static boolean isFTP(TCPPacket packet) {
+        try{
+            byte[] data = packet.getData();
+            byte r = data[12];
+            int len = (r >> 4) & 0x0F; //prendre la longueur du header
+            int length = len*4;
+            byte[] data2 = new byte[data.length-length];
+            System.arraycopy(data, length, data2, 0, data2.length);
+            String utf8string = new String(data2, java.nio.charset.StandardCharsets.UTF_8);
+            String[] comms = {"USER", "PASS", "QUIT",  "CWD", "PWD", "LIST", "RETR", "STOR", "DELE", "TYPE", "MKD", "RMD", "PORT", "PASV", "NOOP"};
+            for(String comm : comms){
+                if(utf8string.contains(comm)){
+                    return true;
+                }
+            }
+            return false;
+        }
+        catch(Exception e){
+            return false;
+        }
+    }
+
     public static TCPPacket AnalyseTCP(IPPacket packet) {
         byte[] data = packet.getData();
 
@@ -167,13 +189,17 @@ public class PacketHandler {
         byte[] data = packet.getData();
         byte[] data2 = new byte[data.length-8];
         System.arraycopy(data, 7, data2, 0, data2.length);
-        ByteBuffer src = ByteBuffer.wrap(data,0,2);
-        ByteBuffer dst = ByteBuffer.wrap(data,2,2);
+        ByteBuffer buffer = ByteBuffer.wrap(data);
+
+        // Port source (octets 0-1)
+        int srcPort = buffer.getShort() & 0xFFFF; // Utiliser & 0xFFFF pour obtenir un entier non signé
+        // Port destination (octets 2-3)
+        int dstPort = buffer.getShort() & 0xFFFF; // Uti
         //if (packet.isLilendian()){
         //    dst.order(ByteOrder.LITTLE_ENDIAN);
         //    src.order(ByteOrder.LITTLE_ENDIAN);
         //}
-        return new UDPPacket(data2, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), src.getShort(), dst.getShort());
+        return new UDPPacket(data2, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.getEtherType(), packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), srcPort, dstPort);
     }
 
     public static HTTPPacket AnalyseHTTP(TCPPacket packet) {
@@ -233,6 +259,22 @@ public class PacketHandler {
         return new DNSPacket(data, packet.getTimestampS(), packet.isLilendian(), packet.getMACsrc(), packet.getMACdest(), packet.etherType, packet.getSourceIP(), packet.getDestinationIP(), packet.getProtocol(), packet.getPortSrc(), packet.getPortDst(), f,utf8string);
     }
 
+    public static boolean isDNS(UDPPacket packet) {
+        byte[] data = packet.getData();
+
+        // Assurez-vous que les données contiennent au moins 4 octets
+        if (data.length < 4) {
+            return false; // Pas assez de données pour vérifier
+        }
+
+        ByteBuffer buffer = ByteBuffer.wrap(data);
+
+        // Les flags DNS se trouvent aux octets 2 et 3
+        short flags = buffer.getShort(3); // Récupérer les deux octets à partir de l'index 2 for some reason tha data is not cut correctly and there is still one byte that is part od the udp segment first
+
+        return (flags == (short) 0x8180 || flags == (short) 0x0100); // Vérifier si c'est une réponse ou query standard (ce sont les valeurs les plus courantes des flags
+    }
+
     public static QUICPacket AnalyseQUIC(UDPPacket packet) {
         byte[] data = packet.getData();
         String type ="" ;
@@ -261,11 +303,11 @@ public class PacketHandler {
     public static boolean isQUIC(UDPPacket packet) {
         if(packet.getPortSrc() == 443 || packet.getPortDst() == 443){
             byte[] data = packet.getData();
-            boolean isSixthBitSet = (data[0] & 0b00100000) != 0;
+            boolean isSixthBitSet = (data[1] & 0b00100000) != 0;
             if(isSixthBitSet){
-                boolean bit7IsOne = (data[0] & 0b10000000) != 0;
+                boolean bit7IsOne = (data[1] & 0b10000000) != 0;
                 if(bit7IsOne) {
-                    byte[] version = {data[1], data[2], data[3], data[4]};
+                    byte[] version = {data[2], data[3], data[4], data[5]};
                     ByteBuffer vrs = ByteBuffer.wrap(version);
                     int v = vrs.getInt();
                     if (v == 1 || v == 1362113840) {
@@ -278,6 +320,19 @@ public class PacketHandler {
             return false;
         }
         return false;
+    }
+
+    public static boolean isQUICS(UDPPacket packet) {
+        byte[] data = packet.getData();
+        byte[] version = {data[2], data[3], data[4], data[5]};
+        ByteBuffer vrs = ByteBuffer.wrap(version);
+        int v = vrs.getInt();
+        if (v == 1 || v == 1362113840) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     public static DHCPPacket AnalyseDHCP(UDPPacket packet) throws UnknownHostException {
@@ -365,5 +420,22 @@ public class PacketHandler {
             hexString.append(String.format("%02X ", b)); // Conversion en hexadécimal avec deux chiffres
         }
         System.out.println(hexString);
+    }
+
+    public static boolean isDHCP(UDPPacket packet) {//dans DHCP ya plein de zéros au milieu donc on teste ça
+        byte[] data = packet.getData();
+        int n = 0;
+        for(byte b : data){
+            if(b==0x00){
+                n++;
+            }
+            else {
+                n =0;
+            }
+            if(n==192){
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -2,7 +2,7 @@ import java.io.FileNotFoundException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
-public class Main {
+public class Main3 {
     public static void main(String[] args) {
         PcapReader reader = new PcapReader();
 
@@ -12,7 +12,7 @@ public class Main {
             int n = 0;
             String filename;
             if(args.length == 0){
-                filename = "C:\\Users\\savpo\\Downloads\\pcaps\\pcaps\\tcp.pcap"; //for debugging purposes
+                filename = "C:\\Users\\savpo\\Downloads\\quic.pcap"; //for debugging purposes
             }
             else {
                 filename = args[0];
@@ -44,7 +44,7 @@ public class Main {
                             break;
                         case 6 :
                             TCPPacket tcpPacket = PacketHandler.AnalyseTCP(ipPacket);
-                            if (tcpPacket.getPortDst() == 80 || tcpPacket.getPortSrc() == 80 || tcpPacket.getPortDst() == 8080 || tcpPacket.getPortSrc() == 8080 || PacketHandler.testHTTP(tcpPacket)) {
+                            if ( PacketHandler.testHTTP(tcpPacket)) {
                                 try {
                                     HTTPPacket httpPacket = PacketHandler.AnalyseHTTP(tcpPacket);
 
@@ -56,10 +56,10 @@ public class Main {
                                 }
 
                             }
-                            else if(tcpPacket.getPortDst() == 21 || tcpPacket.getPortDst() ==20 || tcpPacket.getPortSrc() == 20 || tcpPacket.getPortSrc() == 21 || PacketHandler.isFTP(tcpPacket)){
+                            else if( PacketHandler.isFTP(tcpPacket)){//TODO regarder plus en détails des fois ça marche pas
                                 try{
-                                FTPPacket ftpPacket = PacketHandler.AnalyseFTP(tcpPacket);
-                                System.out.println(n + " " + t  + " " +ftpPacket);}
+                                    FTPPacket ftpPacket = PacketHandler.AnalyseFTP(tcpPacket);
+                                    System.out.println(n + " " + t  + " " +ftpPacket);}
                                 catch (NegativeArraySizeException e){
                                     System.out.println(n + " " + t + " " +tcpPacket);
                                 }
@@ -73,19 +73,19 @@ public class Main {
 
                         case 17 :
                             UDPPacket udpPacket = PacketHandler.AnalyseUDP(ipPacket);
-                            if(udpPacket.getPortDst() == 53 || udpPacket.getPortSrc() == 53 || PacketHandler.isDNS(udpPacket)){
+                            if( PacketHandler.isDNS(udpPacket)){
                                 DNSPacket dnsPacket = PacketHandler.AnalyseDNS(udpPacket);
 
 
                                 System.out.println(n + " " + t +  " " +dnsPacket);
                             }
-                            else if(udpPacket.getPortSrc() == 67 || udpPacket.getPortDst() == 67 || udpPacket.getPortSrc() == 68 || udpPacket.getPortDst() == 68){
+                            else if(PacketHandler.isDHCP(udpPacket)){
                                 DHCPPacket dhcpPacket = PacketHandler.AnalyseDHCP(udpPacket);
 
 
                                 System.out.println(n + " " + t  + " " +dhcpPacket);
                             }
-                            else if (PacketHandler.isQUIC(udpPacket)) {
+                            else if (PacketHandler.isQUICS(udpPacket)) {
                                 QUICPacket quicPacket = PacketHandler.AnalyseQUIC(udpPacket);
                                 System.out.println(n + " " + t  + " " +quicPacket);}
                             else {
@@ -109,13 +109,13 @@ public class Main {
                             break;
                         case 6 :
                             TCPPacket tcpPacket = PacketHandler.AnalyseTCP(ipPacket);
-                            if (tcpPacket.getPortDst() == 80 || tcpPacket.getPortSrc() == 80 || tcpPacket.getPortDst() == 8080 || tcpPacket.getPortSrc() == 8080 || PacketHandler.testHTTP(tcpPacket)) {
+                            if ( PacketHandler.testHTTP(tcpPacket)) {
                                 HTTPPacket httpPacket = PacketHandler.AnalyseHTTP(tcpPacket);
 
 
                                 System.out.println(n + " " + t  + " " +httpPacket);
                             }
-                            else if(tcpPacket.getPortDst() == 21 || tcpPacket.getPortDst() ==20 || tcpPacket.getPortSrc() == 20 || tcpPacket.getPortSrc() == 21 || PacketHandler.isFTP(tcpPacket)){
+                            else if( PacketHandler.isFTP(tcpPacket)){
                                 try{
                                     FTPPacket ftpPacket = PacketHandler.AnalyseFTP(tcpPacket);
                                     System.out.println(n + " " + t  + " " +ftpPacket);}
@@ -130,16 +130,16 @@ public class Main {
                             break;
                         case 17 :
                             UDPPacket udpPacket = PacketHandler.AnalyseUDP(ipPacket);
-                            if(udpPacket.getPortDst() == 53 || udpPacket.getPortSrc() == 53 || PacketHandler.isDNS(udpPacket)){
+                            if(PacketHandler.isDNS(udpPacket)){
                                 DNSPacket dnsPacket = PacketHandler.AnalyseDNS(udpPacket);
 
                                 System.out.println(n + " " + t  + " " +dnsPacket);
                             }
-                            else if(udpPacket.getPortSrc() == 67 || udpPacket.getPortDst() == 67 || udpPacket.getPortSrc() == 68 || udpPacket.getPortDst() == 68){
+                            else if(PacketHandler.isDHCP(udpPacket)){
                                 DHCPPacket dhcpPacket = PacketHandler.AnalyseDHCP(udpPacket);
 
                                 System.out.println(n + " " + t  + " " +dhcpPacket);
-                            } else if (PacketHandler.isQUIC(udpPacket)) {
+                            } else if (PacketHandler.isQUICS(udpPacket)) {
                                 QUICPacket quicPacket = PacketHandler.AnalyseQUIC(udpPacket);
                                 System.out.println(n + " " + t  + " " +quicPacket);
                             } else {
