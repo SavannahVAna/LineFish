@@ -82,6 +82,13 @@ public class Options {
                 realList.add(packet);
             }
         }
+        /*ArrayList<TCPPacket> secondList= new ArrayList<>();
+        int longe = realList.size();
+        for (TCPPacket packet : realList) {
+            if (Math.abs(packet.getAckNb() - ack) <= longe || Math.abs(packet.getSeqNb() - ack) <= longe) {
+                secondList.add(packet);
+            }
+        }*/
         /*for (int i = debut.size() -1; i>=0; i--) {
             TCPPacket packet = debut.get(i);
             if (packet.getPortDst() == prtsrc && packet.getPortSrc() == prtdst && packet.getAckNb() == seq && packet.getSeqNb() == ack-1) {
@@ -104,8 +111,8 @@ public class Options {
                 ack++;
             }
         }*/
-        ArrayList<TCPPacket> secondList= new ArrayList<>(); //1 chercher antécédents
-        boolean update = false;
+        //1 chercher antécédents
+        /*boolean update = false;
         do{
             update = false;
             for (TCPPacket packet : realList) {
@@ -136,8 +143,8 @@ public class Options {
                     }
                 }
             }
-        }while(update);
-
+        }while(update);*/
+        //ça a jamais marché tfacon
 
         //long time = etherlist.getFirst().getTimestampS();
         //double ti;

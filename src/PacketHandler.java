@@ -142,6 +142,12 @@ public class PacketHandler {
                     return true;
                 }
             }
+            String[] codes = {"110", "120", "125", "150", "200", "202", "211", "212", "213", "214", "215", "220", "221", "225", "226", "227", "230", "250", "257", "331", "332", "350", "421", "425", "426", "450", "451","452", "500","501", "502", "503", "504", "530", "532", "550", "551", "552", "553"};
+            for(String code : codes){
+                if(utf8string.startsWith(code)){
+                    return true;
+                }
+            }
             return false;
         }
         catch(Exception e){
@@ -279,12 +285,12 @@ public class PacketHandler {
         byte[] data = packet.getData();
         String type ="" ;
         int ver;
-        boolean bit7IsOne = (data[0] & 0b10000000) != 0;
-        boolean isSixthBitSet = (data[0] & 0b00100000) != 0;
+        boolean bit7IsOne = (data[1] & 0b10000000) != 0;
+        boolean isSixthBitSet = (data[1] & 0b00100000) != 0;
         if(bit7IsOne && isSixthBitSet) {
-            byte[] version = {data[1] , data[2], data[3] , data[4] };
+            byte[] version = {data[2] , data[3], data[4] , data[5] };
             ByteBuffer vrs = ByteBuffer.wrap(version);
-            int maskedBits = (data[0] & 0b00001110) >> 2;
+            int maskedBits = (data[1] & 0b00001110) >> 2;
             ver =  vrs.getInt();
             type = switch (maskedBits) {
                 case 0 -> "initial";

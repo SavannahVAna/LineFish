@@ -12,7 +12,7 @@ public class Main3 {
             int n = 0;
             String filename;
             if(args.length == 0){
-                filename = "C:\\Users\\savpo\\Downloads\\quic.pcap"; //for debugging purposes
+                filename = "C:\\Users\\savpo\\Downloads\\pcaps\\pcaps\\ftp.pcap"; //for debugging purposes
             }
             else {
                 filename = args[0];
@@ -56,7 +56,7 @@ public class Main3 {
                                 }
 
                             }
-                            else if( PacketHandler.isFTP(tcpPacket)){//TODO regarder plus en détails des fois ça marche pas
+                            else if( PacketHandler.isFTP(tcpPacket)){
                                 try{
                                     FTPPacket ftpPacket = PacketHandler.AnalyseFTP(tcpPacket);
                                     System.out.println(n + " " + t  + " " +ftpPacket);}
