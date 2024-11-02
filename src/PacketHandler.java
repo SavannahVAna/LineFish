@@ -43,7 +43,7 @@ public class PacketHandler {
 
         byte firstByte = data[0];
         int version = (firstByte >> 4) & 0x0F;  // Extraire les 4 bits de poids fort (version)
-        int ihl = firstByte & 0x0F;  // Extraire les 4 bits de poids faible (IHL)
+        int ihl = firstByte & 0x0F;
         int headerLen = ihl*4; //la longueur du header
         byte[] remain = new byte[data.length-headerLen];
         System.arraycopy(data, headerLen , remain, 0, remain.length);
@@ -93,20 +93,20 @@ public class PacketHandler {
         byte[] data2 = new byte[data.length - 28];
         System.arraycopy(data, 27, data2, 0, data2.length);
 
-        // Opération (ARP request = 1, reply = 2) -> data[6] et data[7]
+        // Opération
         int pr = ((data[6] & 0xFF) << 8) | (data[7] & 0xFF);
         String p = (pr == 1) ? "request" : (pr == 2) ? "reply" : "unknown";
 
-        // Adresse MAC source (6 octets à partir de data[8])
+        // Adresse MAC source
         String sdMAC = toHexString(Arrays.copyOfRange(data, 8, 14));
 
-        // Adresse IP source (4 octets à partir de data[14])
+        // Adresse IP source
         String sdIP = InetAddress.getByAddress(Arrays.copyOfRange(data, 14, 18)).getHostAddress();
 
-        // Adresse MAC destination (6 octets à partir de data[18])
+        // Adresse MAC destination
         String dstMAC = toHexString(Arrays.copyOfRange(data, 18, 24));
 
-        // Adresse IP destination (4 octets à partir de data[24])
+        // Adresse IP destination
         String dstIP = InetAddress.getByAddress(Arrays.copyOfRange(data, 24, 28)).getHostAddress();
 
         return new ARPPacket(data2, packet.getTimestampS(), packet.isLilendian(),
@@ -158,22 +158,18 @@ public class PacketHandler {
     public static TCPPacket AnalyseTCP(IPPacket packet) {
         byte[] data = packet.getData();
 
-        // Lecture des ports source et destination (2 octets chacun)
         ByteBuffer buffer = ByteBuffer.wrap(data);
 
-        // Port source (octets 0-1)
-        int srcPort = buffer.getShort() & 0xFFFF; // Utiliser & 0xFFFF pour obtenir un entier non signé
-        // Port destination (octets 2-3)
-        int dstPort = buffer.getShort() & 0xFFFF; // Utiliser & 0xFFFF pour obtenir un entier non signé
-
-        // Lecture des numéros de séquence et d'accusé de réception (4 octets chacun)
+        // Port source
+        int srcPort = buffer.getShort() & 0xFFFF;
+        // Port destination
+        int dstPort = buffer.getShort() & 0xFFFF;
+        // Lecture des numéros de séquence et d'ack (4 octets chacun)
         int seqNumber = buffer.getInt(); // Octets 4-7
         int ackNumber = buffer.getInt(); // Octets 8-11
 
-        // Lecture des flags TCP (octet 13)
+        // Lecture des flags TCP
         String flags = extractTcpFlags(data[13]);
-
-        // Création et retour du paquet TCP
         return new TCPPacket(data,
                 packet.getTimestampS(),
                 packet.isLilendian(),
@@ -197,9 +193,9 @@ public class PacketHandler {
         System.arraycopy(data, 7, data2, 0, data2.length);
         ByteBuffer buffer = ByteBuffer.wrap(data);
 
-        // Port source (octets 0-1)
+        // Port source
         int srcPort = buffer.getShort() & 0xFFFF; // Utiliser & 0xFFFF pour obtenir un entier non signé
-        // Port destination (octets 2-3)
+        // Port destination
         int dstPort = buffer.getShort() & 0xFFFF; // Uti
         //if (packet.isLilendian()){
         //    dst.order(ByteOrder.LITTLE_ENDIAN);
@@ -388,7 +384,7 @@ public class PacketHandler {
         StringBuilder hexString = new StringBuilder();
         while (buffer.hasRemaining()) {
             byte b = buffer.get();
-            hexString.append(String.format("%02X ", b)); // Conversion en hexadécimal avec deux chiffres
+            hexString.append(String.format("%02X ", b)); // Conversion en hexadécimal
         }
         return hexString.toString();
     }
@@ -396,7 +392,7 @@ public class PacketHandler {
     public static String toHexString(byte[] bytes) {
         StringBuilder hexString = new StringBuilder();
         for (byte b : bytes) {
-            hexString.append(String.format("%02X ", b)); // Conversion en hexadécimal avec deux chiffres
+            hexString.append(String.format("%02X ", b)); // Conversion en hexadécimal
         }
         return hexString.toString().trim();
     }
@@ -411,7 +407,7 @@ public class PacketHandler {
         StringBuilder hexString = new StringBuilder();
         while (buffer.hasRemaining()) {
             byte b = buffer.get();
-            hexString.append(String.format("%02X ", b)); // Conversion en hexadécimal avec deux chiffres
+            hexString.append(String.format("%02X ", b)); // Conversion en hexadécimal
         }
         System.out.println(hexString);
 
@@ -423,7 +419,7 @@ public class PacketHandler {
         StringBuilder hexString = new StringBuilder();
         while (buffer.hasRemaining()) {
             byte b = buffer.get();
-            hexString.append(String.format("%02X ", b)); // Conversion en hexadécimal avec deux chiffres
+            hexString.append(String.format("%02X ", b)); // Conversion en hexadécimal
         }
         System.out.println(hexString);
     }
